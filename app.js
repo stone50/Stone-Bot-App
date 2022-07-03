@@ -1,17 +1,23 @@
+console.log('Initializing requires...');
+
 require('dotenv/config');
 
 const tmi = require('tmi.js');
 const mongoose = require('mongoose');
-const api = require('./api');
+const API = require('./api');
 const { Command } = require('./command');
 const { Timer } = require('./timer');
 const { Message } = require('./message');
+
+console.log('Initializing enviroment variables...');
 
 const botUsername = process.env.BOT_USERNAME;
 const twitchAuth = process.env.TWITCH_OAUTH;
 const twitchChannel = process.env.TWITCH_CHANNEL;
 const databaseUsername = process.env.DATABASE_USERNAME;
 const databasePassword = process.env.DATABASE_PASSWORD;
+
+console.log('Initializing Twitch client...');
 
 const client = new tmi.Client({
     options: { debug: true, messagesLogLevel: "info" },
@@ -26,20 +32,24 @@ const client = new tmi.Client({
     channels: [twitchChannel]
 });
 
-function randomRange(min, max) {
+const randomRange = (min, max) => {
     return Math.floor((Math.random() * (max - min)) + min);
 }
 
+console.log('Initializing timers...');
+
 const timers = {
     quote: new Timer(() => {
-        const quotes = [];  //get from database
-        const quoteIndex = randomRange(0, quotes.length);
-        client.say(twitchChannel, `Time for a random quote by ${twitchChannel}! Quote ${quoteIndex + 1}: ${quotes[quoteIndex]}`);
+        API.getRandomQuote((quote, quoteIndex) => {
+            client.say(twitchChannel, `Time for a random quote by ${twitchChannel}! Quote ${quoteIndex + 1}: ${quote}`);
+        });
     }, randomRange(600000, 900000)),
     discord: new Timer(() => {
         client.say(twitchChannel, `Join us in our discourse at https://discord.com/invite/ANxbaZdRAY`);
     }, randomRange(1500000, 1800000))
 };
+
+console.log('Initializing commands...');
 
 const commands = {
     '!commands': new Command(
@@ -185,41 +195,70 @@ const commands = {
     ),
     '!quote': new Command(
         ({ userstate, messageParms }) => {
-            const quotes = [];  //get from database
             if (!messageParms) {
-                const quoteIndex = randomRange(0, quotes.length);
-                return client.say(twitchChannel, `${userstate.username}, for you, I choose quote ${quoteIndex + 1}: ${quotes[quoteIndex]}`);
-            }
-            const quoteIndex = parseInt(messageParms) - 1;
-            if (quoteIndex == NaN) {
-                return client.say(twitchChannel, `${userstate.username}, I have never heard that quote.`);
-            }
-            if (!quotes[quoteIndex]) {
-                return client.say(twitchChannel, `${userstate.username}, you must pick a quote between 1 and ${quotes.length}.`);
+                return API.getRandomQuote((quote, quoteIndex) => {
+                    client.say(twitchChannel, `${userstate.username}, for you, I choose quote ${quoteIndex + 1}: ${quote}`);
+                });
             }
 
-            client.say(twitchChannel, `${userstate.username}, here is quote ${quoteIndex + 1}: ${quotes[quoteIndex]}`);
+            const quoteIndex = parseInt(messageParms) - 1;
+
+            API.getQuote(quoteIndex, (quote) => {
+                if (!quote) {
+                    return API.getQuoteCount(quoteCount => {
+                        client.say(twitchChannel, `${userstate.username}, you must choose a quote between 1 and ${quoteCount}.`);
+                    });
+                }
+
+                client.say(twitchChannel, `${userstate.username}, here is quote ${quoteIndex + 1}: ${quote}`);
+            });
         }
     ),
     '!addquote': new Command(
         ({ userstate, messageParms }) => {
-            //set quotes in database
+            API.addQuote(messageParms, newQuotes => {
+                client.say(twitchChannel, `Quote ${newQuotes.length} has been added thanks to ${userstate.username}!`);
+            });
         },
         'mod'
     ),
     '!deletequote': new Command(
         ({ userstate, messageParms }) => {
-            //set quotes in database
+            const quoteIndex = parseInt(messageParms) - 1;
+
+            API.getQuoteCount(quoteCount => {
+                if (quoteIndex == NaN || quoteIndex >= quoteCount) {
+                    return client.say(twitchChannel, `${userstate.username}, you must choose a quote between 1 and ${quoteCount}.`);
+                }
+
+                API.deleteQuote(quoteIndex, quotes => {
+                    client.say(twitchChannel, `Quote ${quoteIndex + 1} has been deleted thanks to ${userstate.username}!`);
+                })
+            });
         },
         'mod'
     ),
     '!editquote': new Command(
         ({ userstate, messageParms }) => {
-            //set quotes in database
+            const parmsArray = messageParms.split(' ');
+            const quoteIndex = parseInt(parmsArray.shift()) - 1;
+            const newQuote = parmsArray.join(' ');
+
+            API.getQuoteCount(quoteCount => {
+                if (quoteIndex == NaN || quoteIndex >= quoteCount) {
+                    return client.say(twitchChannel, `${userstate.username}, you must choose a quote between 1 and ${quoteCount}.`);
+                }
+
+                API.editQuote(quoteIndex, newQuote, quotes => {
+                    client.say(twitchChannel, `Quote ${quoteIndex + 1} has been edited thanks to ${userstate.username}!`);
+                })
+            });
         },
         'mod'
     )
 };
+
+console.log('Initializing messages...');
 
 const messages = [
     new Message('stonebot', ({ userstate }) => {
@@ -250,6 +289,8 @@ const messages = [
         client.say(twitchChannel, `Hahaha`);
     })
 ];
+
+console.log('Initializing Twitch event handlers...');
 
 //#region twitch event handling
 
@@ -344,12 +385,9 @@ client.on('subscription', (channel, username, method, message, userstate) => {
 
 //#endregion
 
-//#region database endpoints
-
-
-
-//#endregion
+console.log('Connecting to database...');
 
 mongoose.connect(`mongodb+srv://${databaseUsername}:${databasePassword}@cluster0.qlwdj5s.mongodb.net/?retryWrites=true&w=majority`, () => {
+    console.log('Connecting to Twitch...');
     client.connect().catch(console.error);
 });
