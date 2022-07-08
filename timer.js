@@ -1,30 +1,30 @@
 class Timer {
-    #enabled;
-    #interval;
+    #enabled
+    #interval
 
     constructor(handler, delay, enabled = true) {
-        this.handler = handler;
-        this.delay = delay;
-        this.#enabled = enabled;
+        this.handler = handler
+        this.delay = delay
+        this.#enabled = enabled
         if (this.#enabled) {
-            this.#interval = setInterval(this.handler, this.delay);
+            this.#interval = setInterval(this.handler, this.delay)
         }
     }
 
     setEnabled(enabled) {
-        this.#enabled = enabled;
-        clearInterval(this.#interval);
+        this.#enabled = enabled
+        clearInterval(this.#interval)
         if (this.#enabled) {
-            this.#interval = setInterval(this.handler, this.delay);
+            this.#interval = setInterval(this.handler, this.delay)
         }
     }
 
     reset() {
         if (this.#enabled) {
-            clearInterval(this.#interval);
-            this.#interval = setInterval(this.handler, this.delay);
+            clearInterval(this.#interval)
+            this.#interval = setInterval(this.handler, this.delay)
         }
     }
-};
+}
 
-exports.Timer = Timer;
+exports.Timer = Timer

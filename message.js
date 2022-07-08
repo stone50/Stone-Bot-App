@@ -1,15 +1,11 @@
 class Message {
-    constructor(keyword, handler, enabled = true) {
-        let regexStr = '\\b';
-        for (let i = 0; i < keyword.length; i++) {
-            regexStr += `(${keyword[i]} *)+`;
-        }
-        regexStr += '\\b';
-        this.keywordRegex = new RegExp(regexStr);
-        this.keyword = keyword;
-        this.handler = handler;
-        this.enabled = enabled;
+    constructor(keyword, regexStr, responses, enabled) {
+        this.keyword = keyword
+        this.regexStr = regexStr
+        this.regex = new RegExp(regexStr)
+        this.responses = responses
+        this.enabled = enabled
     }
-};
+}
 
-exports.Message = Message;
+module.exports = Message
