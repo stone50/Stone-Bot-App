@@ -3,7 +3,7 @@ console.log('Initializing requires...')
 //#region requires
 
 require('dotenv/config')
-const setupEventHandlers = require('./twitch events')
+const setupEventHandlers = require('./twitch events/setup_event_handlers')
 const { Client } = require('tmi.js')
 const mongoose = require('mongoose')
 

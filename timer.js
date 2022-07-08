@@ -2,13 +2,11 @@ class Timer {
     #enabled
     #interval
 
-    constructor(handler, delay, enabled = true) {
+    constructor(keyword, handler, delay, enabled) {
+        this.keyword = keyword
         this.handler = handler
         this.delay = delay
-        this.#enabled = enabled
-        if (this.#enabled) {
-            this.#interval = setInterval(this.handler, this.delay)
-        }
+        this.setEnabled(enabled)
     }
 
     setEnabled(enabled) {
@@ -27,4 +25,4 @@ class Timer {
     }
 }
 
-exports.Timer = Timer
+module.exports = Timer

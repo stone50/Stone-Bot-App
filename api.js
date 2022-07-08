@@ -2,6 +2,7 @@
 
 const { model, Schema } = require('mongoose')
 
+const Timer = require('./timer')
 const Command = require('./command')
 const Message = require('./message')
 
@@ -17,6 +18,7 @@ const sharedData = {
     ],
     botDoc: null,
     localDatabase: {
+        timers: {},
         commands: {},
         feedCount: 0,
         quotes: [],
@@ -25,6 +27,12 @@ const sharedData = {
 }
 
 //#region schemas and models
+
+const timerSchema = new Schema({
+    keyword: String,
+    delay: Number,
+    enabled: Boolean
+})
 
 const commandSchema = new Schema({
     keyword: String,
@@ -40,6 +48,10 @@ const messageSchema = new Schema({
 })
 
 const botModel = model('stone-bot-profiles', new Schema({
+    timers: {
+        type: Object,
+        of: timerSchema
+    },
     commands: {
         type: Object,
         of: commandSchema
@@ -59,6 +71,20 @@ const botModel = model('stone-bot-profiles', new Schema({
 const loadBotDoc = async () => {
     sharedData.botDoc = await botModel.findOne()
     return sharedData.botDoc
+}
+
+const loadTimers = async () => {
+    sharedData.localDatabase.timers = {}
+    Object.keys(sharedData.botDoc.timers).forEach(timerKeyword => {
+        const botDocTimer = sharedData.botDoc.timers[timerKeyword]
+        sharedData.localDatabase.timers[timerKeyword] = new Timer(
+            timerKeyword,
+            require(`./timers/${timerKeyword}`),
+            botDocTimer.delay,
+            botDocTimer.enabled
+        )
+    })
+    return sharedData.localDatabase.timers
 }
 
 const loadCommands = async () => {
@@ -89,7 +115,7 @@ const loadMessages = async () => {
     sharedData.localDatabase.messages = {}
     Object.keys(sharedData.botDoc.messages).forEach(messageKeyword => {
         const botDocMessage = sharedData.botDoc.messages[messageKeyword]
-        sharedData.localDatabase[messageKeyword] = new Message(
+        sharedData.localDatabase.messages[messageKeyword] = new Message(
             messageKeyword,
             botDocMessage.regexStr,
             botDocMessage.responses,
@@ -101,6 +127,7 @@ const loadMessages = async () => {
 
 const loadDatabase = async () => {
     await loadBotDoc()
+    loadTimers()
     loadCommands()
     loadFeedCount()
     loadQuotes()
@@ -112,14 +139,32 @@ const loadDatabase = async () => {
 
 //#region save sharedData
 
+const saveTimers = async (saveToDatabase = true) => {
+    sharedData.botDoc.timers = {}
+    Object.keys(sharedData.localDatabase.timers).forEach(timerKeyword => {
+        const localDatabaseTimer = sharedData.localDatabase.timers[timerKeyword]
+        sharedData.botDoc.timers[timerKeyword] = {
+            keyword: timerKeyword,
+            delay: localDatabaseTimer.delay,
+            enabled: localDatabaseTimer.enabled
+        }
+    })
+
+    if (saveToDatabase) {
+        sharedData.botDoc.save()
+    }
+
+    return sharedData.botDoc.timers
+}
+
 const saveCommands = async (saveToDatabase = true) => {
     sharedData.botDoc.commands = {}
     Object.keys(sharedData.localDatabase.commands).forEach(commandKeyword => {
         const localDatabaseCommand = sharedData.localDatabase.commands[commandKeyword]
         sharedData.botDoc.commands[commandKeyword] = {
             keyword: commandKeyword,
-            permission: sharedData.permissionHierarchy[sharedData.localDatabaseCommand.permission],
-            enabled: sharedData.localDatabaseCommand.enabled
+            permission: sharedData.permissionHierarchy[localDatabaseCommand.permission],
+            enabled: localDatabaseCommand.enabled
         }
     })
 
@@ -156,9 +201,9 @@ const saveMessages = async (saveToDatabase = true) => {
         const localDatabaseMessage = sharedData.localDatabase.messages[messageKeyword]
         sharedData.botDoc.messages[messageKeyword] = {
             keyword: messageKeyword,
-            regexStr: sharedData.localDatabaseMessage.regexStr,
-            responses: sharedData.localDatabaseMessage.responses,
-            enabled: sharedData.localDatabaseMessage.enabled
+            regexStr: localDatabaseMessage.regexStr,
+            responses: localDatabaseMessage.responses,
+            enabled: localDatabaseMessage.enabled
         }
     })
 
@@ -170,10 +215,12 @@ const saveMessages = async (saveToDatabase = true) => {
 }
 
 const saveDatabase = async () => {
+    const timers = saveTimers(false)
     const commands = saveCommands(false)
     const feedCount = saveLocalFeedCount(false)
     const quotes = saveLocalQuotes(false)
     const messages = saveLocalMessages(false)
+    await timers
     await commands
     await feedCount
     await quotes
@@ -194,16 +241,37 @@ const setTwitchClient = (client) => {
 
 //#endregion
 
+//#region timers CRUD
+
+const addTimer = timer => {
+    sharedData.localDatabase.timers[timer.keyword] = timer
+    saveTimers()
+    return sharedData.localDatabase.timers
+}
+
+const setTimerDelay = (keyword, delay) => {
+    const timer = sharedData.localDatabase.timers[keyword]
+    timer.delay = delay
+    timer.reset()
+    saveTimers()
+    return timer
+}
+
+const setTimerEnable = (keyword, enable) => {
+    const timer = sharedData.localDatabase.commands[keyword]
+    timer.setEnabled(enable)
+    saveTimers()
+    return timer
+}
+
+//#endregion
+
 //#region commands CRUD
 
 const addCommand = (command) => {
     sharedData.localDatabase.commands[command.keyword] = command
     saveCommands()
     return sharedData.localDatabase.commands
-}
-
-const getCommand = (keyword) => {
-    return sharedData.localDatabase.commands[keyword]
 }
 
 const setCommandPermission = (keyword, permission) => {
@@ -230,10 +298,6 @@ const deleteCommand = (keyword) => {
 
 //#region feed count CRUD
 
-const getFeedCount = () => {
-    return sharedData.localDatabase.feedCount
-}
-
 const setFeedCount = (count) => {
     sharedData.localDatabase.feedCount = count
     saveFeedCount()
@@ -252,14 +316,6 @@ const addQuote = (quote) => {
     sharedData.localDatabase.quotes.push(quote)
     saveLocalQuotes()
     return sharedData.localDatabase.quotes
-}
-
-const getQuote = (quoteIndex) => {
-    return sharedData.localDatabase.quotes[quoteIndex]
-}
-
-const getQuoteCount = () => {
-    return sharedData.localDatabase.quotes.length
 }
 
 const editQuote = (quoteIndex, newQuote) => {
@@ -281,28 +337,29 @@ const deleteQuote = (quoteIndex) => {
 module.exports = {
     sharedData,
     loadBotDoc,
+    loadTimers,
     loadCommands,
     loadFeedCount,
     loadQuotes,
     loadMessages,
     loadDatabase,
+    saveTimers,
     saveCommands,
     saveFeedCount,
     saveQuotes,
     saveMessages,
     saveDatabase,
     setTwitchClient,
+    addTimer,
+    setTimerDelay,
+    setTimerEnable,
     addCommand,
-    getCommand,
     setCommandPermission,
     setCommandEnable,
     deleteCommand,
-    getFeedCount,
     setFeedCount,
     incrementFeedCount,
     addQuote,
-    getQuote,
-    getQuoteCount,
     editQuote,
     deleteQuote
 }
