@@ -2,40 +2,82 @@ console.log('Initializing requires...')
 
 //#region requires
 
-require('dotenv/config')
+const dotenv = require('dotenv').config({
+    path: `${__dirname}/.env`
+})
+if (dotenv.error) {
+    throw dotenv.error;
+}
+
 const setupEventHandlers = require('./twitch events/handlers')
 const { Client } = require('tmi.js')
 const mongoose = require('mongoose')
 
-const { sharedData, loadDatabase, setTwitchClient, addCommand } = require('./api')
+const { sharedData, loadDatabase, setTwitchClient } = require('./api')
 
 //#endregion
 
-console.log('Connecting to database...')
+const start = async () => {
+    console.log(`
+    ======================================
+    |        --------------------        |
+    |      /                      \\      |
+    |      |     _          _     |      |
+    |     /|    / \\        / \\    |\\     |
+    |    | |    \\_/        \\_/    | |    |
+    |     \\|                      |/     |
+    |      |                      |      |
+    |      |      \\________/      |      |
+    |      |                      |      |
+    |      \\______________________/      |
+    |                                    |
+    | Stone Bot v1.0.0                   |
+    ======================================
 
-mongoose.connect(process.env.DATABASE_CONNECT_STRING, async () => {
-    console.log('Loading data from database...')
+    Press Ctrl + C anytime to close
 
-    await loadDatabase()
+    `)
 
-    console.log('Initializing Twitch Client...')
+    try {
 
-    setTwitchClient(new Client({
-        options: { debug: true, messagesLogLevel: "info" },
-        connection: {
-            reconnect: true,
-            secure: true
-        },
-        identity: {
-            username: process.env.BOT_USERNAME,
-            password: process.env.TWITCH_OAUTH
-        },
-        channels: [process.env.TWITCH_CHANNEL]
-    }))
+        console.log('Initializing database connection event handlers...')
 
-    console.log('Initializing Twitch event handlers...')
+        mongoose.connection.on('error', err => {
+            console.error(err);
+        })
 
-    setupEventHandlers()
+        console.log('Connecting to database...')
 
-    sharedData.twitchClient.connect().catch(console.error)
-})
+        await mongoose.connect(process.env.DATABASE_CONNECT_STRING)
+
+        console.log('Loading data from database...')
+
+        await loadDatabase()
+
+        console.log('Initializing Twitch Client...')
+
+        setTwitchClient(new Client({
+            options: { debug: true, messagesLogLevel: "info" },
+            connection: {
+                reconnect: true,
+                secure: true
+            },
+            identity: {
+                username: process.env.BOT_USERNAME,
+                password: process.env.TWITCH_OAUTH
+            },
+            channels: [process.env.TWITCH_CHANNEL]
+        }))
+
+        console.log('Initializing Twitch event handlers...')
+
+        setupEventHandlers()
+
+        sharedData.twitchClient.connect().catch(console.error)
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+start()
