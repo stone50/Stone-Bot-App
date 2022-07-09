@@ -11,4 +11,4 @@ const setupEventHandlers = () => {
     sharedData.twitchClient.on('raided', require('./raided'))
 }
 
-module.exports = setupEventHandlers;
+module.exports = setupEventHandlers

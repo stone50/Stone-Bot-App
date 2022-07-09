@@ -1,10 +1,13 @@
 const { sharedData } = require('../api')
-const messageHandler = require('../message_handler')
-const commandHandler = require('../commands/command_handler')
+const messageHandler = require('../messages/handler')
+const commandHandler = require('../commands/handler')
 
 const handler = (channel, userstate, message, self) => {
 
     if (self) return
+
+    channel = channel.slice(1)
+    message = message.toLocaleLowerCase()
 
     let userPermission = sharedData.permissionHierarchy.indexOf('viewer')
     if (userstate.username == channel) {
@@ -15,20 +18,18 @@ const handler = (channel, userstate, message, self) => {
         userPermission = sharedData.permissionHierarchy.indexOf('sub')
     }
 
-    const lowerMessage = message.toLocaleLowerCase()
-
     const parms = {
         channel,
         userstate,
-        message: lowerMessage,
+        message,
         userPermission
     }
 
-    if (lowerMessage.charAt(0) == '!') {
+    if (message.charAt(0) == '!') {
         return commandHandler(parms)
     }
 
     messageHandler(parms)
 }
 
-module.exports = handler;
+module.exports = handler

@@ -6,4 +6,4 @@ const handler = (channel, username, self) => {
     }
 }
 
-module.exports = handler;
+module.exports = handler

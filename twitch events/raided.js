@@ -7,4 +7,4 @@ const handler = (channel, username, viewers, userstate) => {
     }, 10000)
 }
 
-module.exports = handler;
+module.exports = handler

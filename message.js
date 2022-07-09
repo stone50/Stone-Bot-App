@@ -1,9 +1,9 @@
 class Message {
-    constructor(keyword, regexStr, responses, enabled) {
+    constructor(keyword, regexStr, handler, enabled) {
         this.keyword = keyword
         this.regexStr = regexStr
         this.regex = new RegExp(regexStr)
-        this.responses = responses
+        this.handler = handler
         this.enabled = enabled
     }
 }

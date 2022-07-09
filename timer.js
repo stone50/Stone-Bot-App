@@ -17,6 +17,10 @@ class Timer {
         }
     }
 
+    getEnabled() {
+        return this.#enabled
+    }
+
     reset() {
         if (this.#enabled) {
             clearInterval(this.#interval)

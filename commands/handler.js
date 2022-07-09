@@ -2,13 +2,14 @@ const { sharedData } = require('../api')
 
 const commandHandler = ({ channel, userstate, message, userPermission }) => {
     const messageArray = message.split(' ')
-    const commandKeyword = messageArray.shift().slice(1);
+    const commandKeyword = messageArray.shift().slice(1)
     const messageParms = messageArray.join(' ')
 
     const parms = {
         channel,
         userstate,
-        messageParms
+        messageParms,
+        userPermission
     }
 
     const commandObject = sharedData.localDatabase.commands[commandKeyword]
@@ -23,7 +24,7 @@ const commandHandler = ({ channel, userstate, message, userPermission }) => {
         return sharedData.twitchClient.say(channel, `${userstate.username}, you do not have permission to use !${commandKeyword}.`)
     }
 
-    return commandObject.handler(parms)
+    commandObject.handler(parms)
 }
 
 module.exports = commandHandler

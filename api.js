@@ -22,7 +22,10 @@ const sharedData = {
         commands: {},
         feedCount: 0,
         quotes: [],
-        messages: {}
+        messages: {},
+        chessTips: [],
+        kansasFacts: [],
+        crabFacts: []
     }
 }
 
@@ -43,7 +46,6 @@ const commandSchema = new Schema({
 const messageSchema = new Schema({
     keyword: String,
     regexStr: String,
-    responses: [String],
     enabled: Boolean
 })
 
@@ -61,7 +63,10 @@ const botModel = model('stone-bot-profiles', new Schema({
     messages: {
         type: Object,
         of: messageSchema
-    }
+    },
+    chessTips: [String],
+    kansasFacts: [String],
+    crabFacts: [String]
 }))
 
 //#endregion
@@ -118,20 +123,46 @@ const loadMessages = async () => {
         sharedData.localDatabase.messages[messageKeyword] = new Message(
             messageKeyword,
             botDocMessage.regexStr,
-            botDocMessage.responses,
+            require(`./messages/${messageKeyword}`),
             botDocMessage.enabled
         )
     })
     return sharedData.localDatabase.messages
 }
 
+const loadChessTips = async () => {
+    sharedData.localDatabase.chessTips = sharedData.botDoc.chessTips
+    return sharedData.localDatabase.chessTips
+}
+
+const loadKansasFacts = async () => {
+    sharedData.localDatabase.kansasFacts = sharedData.botDoc.kansasFacts
+    return sharedData.localDatabase.kansasFacts
+}
+
+const loadCrabFacts = async () => {
+    sharedData.localDatabase.crabFacts = sharedData.botDoc.crabFacts
+    return sharedData.localDatabase.chesscrabFactsTips
+}
+
 const loadDatabase = async () => {
     await loadBotDoc()
-    loadTimers()
-    loadCommands()
-    loadFeedCount()
-    loadQuotes()
-    loadMessages()
+    const timers = loadTimers()
+    const commands = loadCommands()
+    const feedCount = loadFeedCount()
+    const quotes = loadQuotes()
+    const messages = loadMessages()
+    const chessTips = loadChessTips()
+    const kansasFacts = loadKansasFacts()
+    const crabFacts = loadCrabFacts()
+    await timers
+    await commands
+    await feedCount
+    await quotes
+    await messages
+    await chessTips
+    await kansasFacts
+    await crabFacts
     return sharedData.localDatabase
 }
 
@@ -139,25 +170,23 @@ const loadDatabase = async () => {
 
 //#region save sharedData
 
-const saveTimers = async (saveToDatabase = true) => {
+const saveTimers = async () => {
     sharedData.botDoc.timers = {}
     Object.keys(sharedData.localDatabase.timers).forEach(timerKeyword => {
         const localDatabaseTimer = sharedData.localDatabase.timers[timerKeyword]
         sharedData.botDoc.timers[timerKeyword] = {
             keyword: timerKeyword,
             delay: localDatabaseTimer.delay,
-            enabled: localDatabaseTimer.enabled
+            enabled: localDatabaseTimer.getEnabled()
         }
     })
 
-    if (saveToDatabase) {
-        sharedData.botDoc.save()
-    }
+    await sharedData.botDoc.save()
 
     return sharedData.botDoc.timers
 }
 
-const saveCommands = async (saveToDatabase = true) => {
+const saveCommands = async () => {
     sharedData.botDoc.commands = {}
     Object.keys(sharedData.localDatabase.commands).forEach(commandKeyword => {
         const localDatabaseCommand = sharedData.localDatabase.commands[commandKeyword]
@@ -168,198 +197,107 @@ const saveCommands = async (saveToDatabase = true) => {
         }
     })
 
-    if (saveToDatabase) {
-        sharedData.botDoc.save()
-    }
+    await sharedData.botDoc.save()
 
     return sharedData.botDoc.commands
 }
 
-const saveFeedCount = async (saveToDatabase = true) => {
+const saveFeedCount = async () => {
     sharedData.botDoc.feedCount = sharedData.localDatabase.feedCount
 
-    if (saveToDatabase) {
-        sharedData.botDoc.save()
-    }
+    await sharedData.botDoc.save()
 
     return sharedData.botDoc.feedCount
 }
 
-const saveQuotes = async (saveToDatabase = true) => {
+const saveQuotes = async () => {
     sharedData.botDoc.quotes = sharedData.localDatabase.quotes
 
-    if (saveToDatabase) {
-        sharedData.botDoc.save()
-    }
+    await sharedData.botDoc.save()
 
     return sharedData.botDoc.quotes
 }
 
-const saveMessages = async (saveToDatabase = true) => {
+const saveMessages = async () => {
     sharedData.botDoc.messages = {}
     Object.keys(sharedData.localDatabase.messages).forEach(messageKeyword => {
         const localDatabaseMessage = sharedData.localDatabase.messages[messageKeyword]
         sharedData.botDoc.messages[messageKeyword] = {
             keyword: messageKeyword,
             regexStr: localDatabaseMessage.regexStr,
-            responses: localDatabaseMessage.responses,
             enabled: localDatabaseMessage.enabled
         }
     })
 
-    if (saveToDatabase) {
-        sharedData.botDoc.save()
-    }
+    await sharedData.botDoc.save()
 
     return sharedData.botDoc.messages
-}
-
-const saveDatabase = async () => {
-    const timers = saveTimers(false)
-    const commands = saveCommands(false)
-    const feedCount = saveLocalFeedCount(false)
-    const quotes = saveLocalQuotes(false)
-    const messages = saveLocalMessages(false)
-    await timers
-    await commands
-    await feedCount
-    await quotes
-    await messages
-    sharedData.botDoc.save()
-    return sharedData.botDoc
 }
 
 //#endregion
 
 //#region CRUD operations
 
-//#region twitchClient CRUD
-
 const setTwitchClient = (client) => {
     sharedData.twitchClient = client
 }
 
-//#endregion
-
-//#region timers CRUD
-
-const addTimer = timer => {
-    sharedData.localDatabase.timers[timer.keyword] = timer
-    saveTimers()
-    return sharedData.localDatabase.timers
-}
-
-const setTimerDelay = (keyword, delay) => {
+const setTimerEnable = async (keyword, enable, awaitSave = false) => {
     const timer = sharedData.localDatabase.timers[keyword]
-    timer.delay = delay
-    timer.reset()
-    saveTimers()
-    return timer
-}
-
-const setTimerEnable = (keyword, enable) => {
-    const timer = sharedData.localDatabase.commands[keyword]
     timer.setEnabled(enable)
-    saveTimers()
+    awaitSave ? await saveTimers() : saveTimers()
     return timer
 }
 
-//#endregion
-
-//#region commands CRUD
-
-const addCommand = (command) => {
-    sharedData.localDatabase.commands[command.keyword] = command
-    saveCommands()
-    return sharedData.localDatabase.commands
-}
-
-const setCommandPermission = (keyword, permission) => {
+const setCommandEnable = async (keyword, enable, awaitSave = false) => {
     const command = sharedData.localDatabase.commands[keyword]
-    command.permission = sharedData.permissionHierarchy.indexOf(permission)
-    saveCommands()
+    command.enabled = enable
+    awaitSave ? await saveCommands() : saveCommands()
     return command
 }
 
-const setCommandEnable = (keyword, enable) => {
-    const command = sharedData.localDatabase.commands[keyword]
-    command.enable = enable
-    saveCommands()
-    return command
-}
-
-const deleteCommand = (keyword) => {
-    delete sharedData.localDatabase.commands[keyword]
-    saveCommands()
-    return sharedData.localDatabase.commands
-}
-
-//#endregion
-
-//#region feed count CRUD
-
-const setFeedCount = (count) => {
-    sharedData.localDatabase.feedCount = count
-    saveFeedCount()
+const incrementFeedCount = async (awaitSave = false) => {
+    sharedData.localDatabase.feedCount++
+    awaitSave ? await saveFeedCount() : saveFeedCount()
     return sharedData.localDatabase.feedCount
 }
 
-const incrementFeedCount = () => {
-    return setFeedCount(sharedData.localDatabase.feedCount + 1)
-}
-
-//#endregion
-
-//#region quotes CRUD
-
-const addQuote = (quote) => {
+const addQuote = async (quote, awaitSave = false) => {
     sharedData.localDatabase.quotes.push(quote)
-    saveLocalQuotes()
+    awaitSave ? await saveQuotes() : saveQuotes()
     return sharedData.localDatabase.quotes
 }
 
-const editQuote = (quoteIndex, newQuote) => {
+const editQuote = async (quoteIndex, newQuote, awaitSave = false) => {
     sharedData.localDatabase.quotes[quoteIndex] = newQuote
-    saveLocalQuotes()
+    awaitSave ? await saveQuotes() : saveQuotes()
     return sharedData.localDatabase.quotes
 }
 
-const deleteQuote = (quoteIndex) => {
+const deleteQuote = async (quoteIndex, awaitSave = false) => {
     sharedData.localDatabase.quotes.splice(quoteIndex, 1)
-    saveLocalQuotes()
+    awaitSave ? await saveQuotes() : saveQuotes()
     return sharedData.localDatabase.quotes
 }
 
-//#endregion
+const setMessageEnable = async (keyword, enable, awaitSave = false) => {
+    const message = sharedData.localDatabase.messages[keyword]
+    message.enabled = enable
+    awaitSave ? await saveMessages() : saveMessages()
+    return message
+}
 
 //#endregion
 
 module.exports = {
     sharedData,
-    loadBotDoc,
-    loadTimers,
-    loadCommands,
-    loadFeedCount,
-    loadQuotes,
-    loadMessages,
     loadDatabase,
-    saveTimers,
-    saveCommands,
-    saveFeedCount,
-    saveQuotes,
-    saveMessages,
-    saveDatabase,
     setTwitchClient,
-    addTimer,
-    setTimerDelay,
     setTimerEnable,
-    addCommand,
-    setCommandPermission,
     setCommandEnable,
-    deleteCommand,
-    setFeedCount,
     incrementFeedCount,
     addQuote,
     editQuote,
-    deleteQuote
+    deleteQuote,
+    setMessageEnable
 }
