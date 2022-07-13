@@ -234,9 +234,39 @@ const saveMessages = async () => {
     return sharedData.botDoc.messages
 }
 
+const saveDatabase = async () => {
+    await saveTimers()
+    await saveCommands()
+    await saveFeedCount()
+    await saveQuotes()
+    await saveMessages()
+    return sharedData.botDoc
+}
+
 //#endregion
 
 //#region CRUD operations
+
+const clearSharedData = () => {
+    sharedData.twitchClient = null
+    sharedData.permissionHierarchy = [
+        'viewer',
+        'sub',
+        'mod',
+        'streamer'
+    ]
+    sharedData.botDoc = null
+    sharedData.localDatabase = {
+        timers: {},
+        commands: {},
+        feedCount: 0,
+        quotes: [],
+        messages: {},
+        chessTips: [],
+        kansasFacts: [],
+        crabFacts: []
+    }
+}
 
 const setTwitchClient = (client) => {
     sharedData.twitchClient = client
@@ -291,6 +321,8 @@ const setMessageEnable = async (keyword, enable, awaitSave = false) => {
 
 module.exports = {
     sharedData,
+    saveDatabase,
+    clearSharedData,
     loadDatabase,
     setTwitchClient,
     setTimerEnable,

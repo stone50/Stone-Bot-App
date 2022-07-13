@@ -1,6 +1,6 @@
 const { sharedData } = require('../api')
 
-const setupEventHandlers = () => {
+const setupEvents = () => {
 
     sharedData.twitchClient.on('hosted', require('./hosted'))
 
@@ -11,4 +11,4 @@ const setupEventHandlers = () => {
     sharedData.twitchClient.on('raided', require('./raided'))
 }
 
-module.exports = setupEventHandlers
+module.exports = setupEvents

@@ -1,6 +1,6 @@
 const { sharedData } = require('../api')
-const messageHandler = require('../messages/handler')
-const commandHandler = require('../commands/handler')
+const messageHandler = require('../messages/messageHandler')
+const commandHandler = require('../commands/commandHandler')
 
 const handler = (channel, userstate, message, self) => {
 
