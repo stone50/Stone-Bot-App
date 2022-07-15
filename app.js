@@ -12,6 +12,10 @@ const setupTwitchEvents = require('./twitch events/setupTwitchEvents')
 const twitchEventHandler = require('./twitch events/twitchEventHandler')
 const { botLog, clearLogs } = require('./api')
 
+const offlineHandler = require('./twitch events/offline')
+
+let server = null
+
 const start = async () => {
 
     clearLogs() // testing
@@ -26,20 +30,15 @@ const start = async () => {
 
     botLog('info', 'starting server')
 
-    app.listen(process.env.SERVER_PORT)
-
-    /* testing
-        call online twitch event handler
-        wait a few seconds
-        call offline twitch event handler
-
-        check if sharedData is cleared
-        check if timers still go off
-        check if tmi event handlers still trigger
-    */
-
+    server = app.listen(process.env.SERVER_PORT)
 }
 
 start().catch(err => {
     botLog('error', err)
+    try {
+        offlineHandler()
+    } catch (error) {
+        botLog('error', error)
+    }
+    server.close()
 })

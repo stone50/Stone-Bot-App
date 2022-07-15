@@ -1,12 +1,22 @@
 const mongoose = require('mongoose')
 
-const { clearSharedData, clearLogs, saveLogs, botLog } = require('../api')
+const { clearSharedData, clearLogs, saveLogs, botLog, sharedData } = require('../api')
 
 const handler = async () => {
 
     botLog('info', 'twitch offline event triggered')
 
-    if (saveLogs()) {
+    botLog('info', 'removing timers')
+
+    Object.keys(sharedData.localDatabase.timers).forEach(timerKeyword => {
+        sharedData.localDatabase.timers[timerKeyword].destroy()
+    })
+
+    botLog('info', 'disconnecting from twitch')
+
+    sharedData.twitchClient.disconnect()
+
+    if (await saveLogs()) {
         clearLogs()
     }
 

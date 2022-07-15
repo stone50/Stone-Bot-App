@@ -262,20 +262,16 @@ const saveMessages = async () => {
 
 const saveLogs = async () => {
     botLog('info', 'saving logs to database')
-    fs.readFile('./logs/log', 'utf8', (err, file) => {
-        if (err) {
-            botLog('warn', `unable to read from log file: ${err}`)
-            return false
-        }
-        file.split('\r\n').forEach(fileLine => {
+    for (const fileLine of fs.readFileSync('./logs.log', 'utf8').split('\r\n')) {
+        if (fileLine) {
             const attributes = fileLine.match(/\[(.*)] (.*): (.*)/)
-            new logModel({
+            await new logModel({
                 timestamp: new Date(attributes[1]),
                 level: attributes[2],
                 message: attributes[3]
             }).save()
-        })
-    })
+        }
+    }
     return true
 }
 

@@ -27,6 +27,10 @@ class Timer {
             this.#interval = setInterval(this.handler, this.delay)
         }
     }
+
+    destroy() {
+        clearInterval(this.#interval)
+    }
 }
 
 module.exports = Timer
