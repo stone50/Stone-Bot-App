@@ -51,13 +51,6 @@ const setupEvents = async () => {
 
     botLog('info', 'setting up twitch event subscriptions')
 
-    // const userAccessToken = (await (await fetch(
-    //     `https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${process.env.TWITCH_REFRESH_TOKEN}`,
-    //     {
-    //         method: 'post'
-    //     }
-    // )).json()).access_token
-
     botLog('info', 'fetching app access token from twitch')
 
     const tokenFetchResponse = await (await fetch(

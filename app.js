@@ -1,10 +1,4 @@
-const dotenv = require('dotenv').config({
-    path: `${__dirname}/.env`
-})
-if (dotenv.error) {
-    throw dotenv.error
-}
-
+require('dotenv').config()
 const express = require('express')
 const app = express()
 
