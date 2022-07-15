@@ -7,7 +7,7 @@ const handler = async ({ channel, userstate, messageParms }) => {
 
     const quotes = sharedData.localDatabase.quotes
 
-    if (quoteIndex == NaN || quoteIndex >= quotes.length) {
+    if (quoteIndex === NaN || quoteIndex >= quotes.length) {
         return sharedData.twitchClient.say(channel, `${userstate.username}, you must choose a quote between 1 and ${quotes.length}.`)
     }
     await editQuote(quoteIndex, newQuote)

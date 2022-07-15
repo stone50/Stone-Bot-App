@@ -1,14 +1,16 @@
 //#region requires
 
 const { model, Schema } = require('mongoose')
+const fs = require('fs')
 
-const Timer = require('./timer')
-const Command = require('./command')
-const Message = require('./message')
+const Timer = require('./components/timer')
+const Command = require('./components/command')
+const Message = require('./components/message')
 
 //#endregion
 
 const sharedData = {
+    logger: null,
     twitchClient: null,
     permissionHierarchy: [
         'viewer',
@@ -69,16 +71,27 @@ const botModel = model('stone-bot-profiles', new Schema({
     crabFacts: [String]
 }))
 
+const logModel = model('logs', new Schema({
+    timestamp: Date,
+    level: String,
+    message: String
+}))
+
 //#endregion
 
 //#region load sharedData
 
 const loadBotDoc = async () => {
+    botLog('info', 'loading bot document from database')
     sharedData.botDoc = await botModel.findOne()
+    if (sharedData.botDoc === null) {
+        throw `bot document fetch failed`
+    }
     return sharedData.botDoc
 }
 
 const loadTimers = async () => {
+    botLog('info', 'loading timers from bot document')
     sharedData.localDatabase.timers = {}
     Object.keys(sharedData.botDoc.timers).forEach(timerKeyword => {
         const botDocTimer = sharedData.botDoc.timers[timerKeyword]
@@ -93,6 +106,7 @@ const loadTimers = async () => {
 }
 
 const loadCommands = async () => {
+    botLog('info', 'loading commands from bot document')
     sharedData.localDatabase.commands = {}
     Object.keys(sharedData.botDoc.commands).forEach(commandKeyword => {
         const botDocCommand = sharedData.botDoc.commands[commandKeyword]
@@ -107,16 +121,19 @@ const loadCommands = async () => {
 }
 
 const loadFeedCount = async () => {
+    botLog('info', 'loading feed count from bot document')
     sharedData.localDatabase.feedCount = sharedData.botDoc.feedCount
     return sharedData.localDatabase.feedCount
 }
 
 const loadQuotes = async () => {
+    botLog('info', 'loading quotes from bot document')
     sharedData.localDatabase.quotes = sharedData.botDoc.quotes
     return sharedData.localDatabase.quotes
 }
 
 const loadMessages = async () => {
+    botLog('info', 'loading messages from bot document')
     sharedData.localDatabase.messages = {}
     Object.keys(sharedData.botDoc.messages).forEach(messageKeyword => {
         const botDocMessage = sharedData.botDoc.messages[messageKeyword]
@@ -131,21 +148,25 @@ const loadMessages = async () => {
 }
 
 const loadChessTips = async () => {
+    botLog('info', 'loading chess tips from bot document')
     sharedData.localDatabase.chessTips = sharedData.botDoc.chessTips
     return sharedData.localDatabase.chessTips
 }
 
 const loadKansasFacts = async () => {
+    botLog('info', 'loading kansas facts from bot document')
     sharedData.localDatabase.kansasFacts = sharedData.botDoc.kansasFacts
     return sharedData.localDatabase.kansasFacts
 }
 
 const loadCrabFacts = async () => {
+    botLog('info', 'loading crab facts from bot document')
     sharedData.localDatabase.crabFacts = sharedData.botDoc.crabFacts
     return sharedData.localDatabase.chesscrabFactsTips
 }
 
 const loadDatabase = async () => {
+    botLog('info', 'loading data from database')
     await loadBotDoc()
     const timers = loadTimers()
     const commands = loadCommands()
@@ -171,6 +192,7 @@ const loadDatabase = async () => {
 //#region save sharedData
 
 const saveTimers = async () => {
+    botLog('info', 'saving timers to database')
     sharedData.botDoc.timers = {}
     Object.keys(sharedData.localDatabase.timers).forEach(timerKeyword => {
         const localDatabaseTimer = sharedData.localDatabase.timers[timerKeyword]
@@ -187,6 +209,7 @@ const saveTimers = async () => {
 }
 
 const saveCommands = async () => {
+    botLog('info', 'saving commands to database')
     sharedData.botDoc.commands = {}
     Object.keys(sharedData.localDatabase.commands).forEach(commandKeyword => {
         const localDatabaseCommand = sharedData.localDatabase.commands[commandKeyword]
@@ -203,6 +226,7 @@ const saveCommands = async () => {
 }
 
 const saveFeedCount = async () => {
+    botLog('info', 'saving feed count to database')
     sharedData.botDoc.feedCount = sharedData.localDatabase.feedCount
 
     await sharedData.botDoc.save()
@@ -211,6 +235,7 @@ const saveFeedCount = async () => {
 }
 
 const saveQuotes = async () => {
+    botLog('info', 'saving quotes to database')
     sharedData.botDoc.quotes = sharedData.localDatabase.quotes
 
     await sharedData.botDoc.save()
@@ -219,6 +244,7 @@ const saveQuotes = async () => {
 }
 
 const saveMessages = async () => {
+    botLog('info', 'saving messages to database')
     sharedData.botDoc.messages = {}
     Object.keys(sharedData.localDatabase.messages).forEach(messageKeyword => {
         const localDatabaseMessage = sharedData.localDatabase.messages[messageKeyword]
@@ -234,13 +260,23 @@ const saveMessages = async () => {
     return sharedData.botDoc.messages
 }
 
-const saveDatabase = async () => {
-    await saveTimers()
-    await saveCommands()
-    await saveFeedCount()
-    await saveQuotes()
-    await saveMessages()
-    return sharedData.botDoc
+const saveLogs = async () => {
+    botLog('info', 'saving logs to database')
+    fs.readFile('./logs/log', 'utf8', (err, file) => {
+        if (err) {
+            botLog('warn', `unable to read from log file: ${err}`)
+            return false
+        }
+        file.split('\r\n').forEach(fileLine => {
+            const attributes = fileLine.match(/\[(.*)] (.*): (.*)/)
+            new logModel({
+                timestamp: new Date(attributes[1]),
+                level: attributes[2],
+                message: attributes[3]
+            }).save()
+        })
+    })
+    return true
 }
 
 //#endregion
@@ -248,6 +284,7 @@ const saveDatabase = async () => {
 //#region CRUD operations
 
 const clearSharedData = () => {
+    botLog('info', 'clearing shared data')
     sharedData.twitchClient = null
     sharedData.permissionHierarchy = [
         'viewer',
@@ -269,10 +306,12 @@ const clearSharedData = () => {
 }
 
 const setTwitchClient = (client) => {
+    botLog('info', 'setting twitch client')
     sharedData.twitchClient = client
 }
 
 const setTimerEnable = async (keyword, enable, awaitSave = false) => {
+    botLog('info', `${enable ? 'enabling' : 'disabling'} ${keyword} timer`)
     const timer = sharedData.localDatabase.timers[keyword]
     timer.setEnabled(enable)
     awaitSave ? await saveTimers() : saveTimers()
@@ -280,6 +319,7 @@ const setTimerEnable = async (keyword, enable, awaitSave = false) => {
 }
 
 const setCommandEnable = async (keyword, enable, awaitSave = false) => {
+    botLog('info', `${enable ? 'enabling' : 'disabling'} ${keyword} command`)
     const command = sharedData.localDatabase.commands[keyword]
     command.enabled = enable
     awaitSave ? await saveCommands() : saveCommands()
@@ -287,41 +327,55 @@ const setCommandEnable = async (keyword, enable, awaitSave = false) => {
 }
 
 const incrementFeedCount = async (awaitSave = false) => {
+    botLog('info', 'incrementing feed count')
     sharedData.localDatabase.feedCount++
     awaitSave ? await saveFeedCount() : saveFeedCount()
     return sharedData.localDatabase.feedCount
 }
 
 const addQuote = async (quote, awaitSave = false) => {
+    botLog('info', `adding quote ${quote}`)
     sharedData.localDatabase.quotes.push(quote)
     awaitSave ? await saveQuotes() : saveQuotes()
     return sharedData.localDatabase.quotes
 }
 
 const editQuote = async (quoteIndex, newQuote, awaitSave = false) => {
+    botLog('info', `editing quote ${quoteIndex} to say "${newQuote}"`)
     sharedData.localDatabase.quotes[quoteIndex] = newQuote
     awaitSave ? await saveQuotes() : saveQuotes()
     return sharedData.localDatabase.quotes
 }
 
 const deleteQuote = async (quoteIndex, awaitSave = false) => {
+    botLog('info', `deleting quote ${quoteIndex}`)
     sharedData.localDatabase.quotes.splice(quoteIndex, 1)
     awaitSave ? await saveQuotes() : saveQuotes()
     return sharedData.localDatabase.quotes
 }
 
 const setMessageEnable = async (keyword, enable, awaitSave = false) => {
+    botLog('info', `${enable ? 'enabling' : 'disabling'} ${keyword} message`)
     const message = sharedData.localDatabase.messages[keyword]
     message.enabled = enable
     awaitSave ? await saveMessages() : saveMessages()
     return message
 }
 
+const clearLogs = () => {
+    botLog('info', 'clearing logs from local file')
+    fs.truncateSync('./logs.log', 0)
+}
+
 //#endregion
+
+const botLog = (level, message) => {
+    fs.appendFileSync(`./logs.log`, `[${new Date().toISOString()}] ${level.toUpperCase()}: ${message}\r\n`)
+}
 
 module.exports = {
     sharedData,
-    saveDatabase,
+    saveLogs,
     clearSharedData,
     loadDatabase,
     setTwitchClient,
@@ -331,5 +385,7 @@ module.exports = {
     addQuote,
     editQuote,
     deleteQuote,
-    setMessageEnable
+    setMessageEnable,
+    clearLogs,
+    botLog
 }

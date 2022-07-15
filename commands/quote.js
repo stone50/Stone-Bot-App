@@ -9,7 +9,7 @@ const handler = ({ channel, userstate, messageParms }) => {
     }
 
     const quoteIndex = parseInt(messageParms) - 1
-    if (quoteIndex == NaN) {
+    if (quoteIndex === NaN) {
         return sharedData.twitchClient.say(channel, `${userstate.username}, I have never heard that quote.`)
     }
     if (!quotes[quoteIndex]) {

@@ -2,7 +2,7 @@ const { randomRange } = require('../utils')
 const { sharedData, incrementFeedCount } = require('../api')
 
 const handler = async ({ channel, userstate }) => {
-    if (randomRange(0, 10) == 0) {
+    if (randomRange(0, 10) === 0) {
         return sharedData.twitchClient.say(channel, `RaccAttack Crayon Oh no! A raccoon stole the crayon, ${userstate.username}!`)
     }
     const feedCount = await incrementFeedCount()

@@ -1,9 +1,16 @@
 const mongoose = require('mongoose')
 
-const { saveDatabase, clearSharedData } = require('../api')
+const { clearSharedData, clearLogs, saveLogs, botLog } = require('../api')
 
 const handler = async () => {
-    await saveDatabase()
+
+    botLog('info', 'twitch offline event triggered')
+
+    if (saveLogs()) {
+        clearLogs()
+    }
+
+    botLog('info', 'disconnecting from database')
 
     mongoose.disconnect()
 

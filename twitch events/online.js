@@ -2,49 +2,43 @@ const setupEventHandlers = require('../tmi events/setupTmiEvents')
 const { Client } = require('tmi.js')
 const mongoose = require('mongoose')
 
-const { sharedData, loadDatabase, setTwitchClient } = require('../api')
+const { sharedData, loadDatabase, setTwitchClient, botLog } = require('../api')
 
 const handler = async () => {
+
+    botLog('info', 'twitch online event triggered')
+
+    botLog('info', 'initializing database connection event handlers')
+
+    mongoose.connection.on('error', err => {
+        throw `database connection failed: ${err}`
+    })
+
+    botLog('info', 'connecting to database')
+
     try {
-
-        console.log('Initializing database connection event handlers...')
-
-        mongoose.connection.on('error', err => {
-            console.error(err)
-        })
-
-        console.log('Connecting to database...')
-
         await mongoose.connect(process.env.DATABASE_CONNECT_STRING)
-
-        console.log('Loading data from database...')
-
-        await loadDatabase()
-
-        console.log('Initializing Twitch Client...')
-
-        setTwitchClient(new Client({
-            options: { debug: true, messagesLogLevel: 'info' },
-            connection: {
-                reconnect: true,
-                secure: true
-            },
-            identity: {
-                username: process.env.BOT_USERNAME,
-                password: process.env.TWITCH_OAUTH
-            },
-            channels: [process.env.TWITCH_CHANNEL]
-        }))
-
-        console.log('Initializing Twitch event handlers...')
-
-        setupEventHandlers()
-
-        sharedData.twitchClient.connect().catch(console.error)
-
-    } catch (error) {
-        console.log(error)
+    } catch (err) {
+        throw `database connection failed: ${err}`
     }
+
+    await loadDatabase()
+
+    setTwitchClient(new Client({
+        identity: {
+            username: process.env.BOT_USERNAME,
+            password: process.env.TWITCH_OAUTH
+        },
+        channels: [process.env.TWITCH_CHANNEL]
+    }))
+
+    setupEventHandlers()
+
+    botLog('info', 'connecting to twitch')
+
+    sharedData.twitchClient.connect().catch(error => {
+        botLog('warn', `twitch connection failed: ${error}`)
+    })
 }
 
 module.exports = handler

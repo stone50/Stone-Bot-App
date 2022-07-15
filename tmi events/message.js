@@ -1,8 +1,9 @@
-const { sharedData } = require('../api')
+const { sharedData, botLog } = require('../api')
 const messageHandler = require('../messages/messageHandler')
 const commandHandler = require('../commands/commandHandler')
 
 const handler = (channel, userstate, message, self) => {
+    botLog('info', `tmi message event hit by ${userstate.username} with message: ${message}`)
 
     if (self) return
 
@@ -10,7 +11,7 @@ const handler = (channel, userstate, message, self) => {
     message = message.toLocaleLowerCase()
 
     let userPermission = sharedData.permissionHierarchy.indexOf('viewer')
-    if (userstate.username == channel) {
+    if (userstate.username === channel) {
         userPermission = sharedData.permissionHierarchy.indexOf('streamer')
     } else if (userstate.mod) {
         userPermission = sharedData.permissionHierarchy.indexOf('mod')
@@ -25,10 +26,12 @@ const handler = (channel, userstate, message, self) => {
         userPermission
     }
 
-    if (message.charAt(0) == '!') {
+    if (message.charAt(0) === '!') {
+        botLog('info', 'message detected as command')
         return commandHandler(parms)
     }
 
+    botLog('info', 'checking for message matches')
     messageHandler(parms)
 }
 
