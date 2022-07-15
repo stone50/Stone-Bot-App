@@ -12,8 +12,6 @@ let server = null
 
 const start = async () => {
 
-    clearLogs() // testing
-
     botLog('info', 'starting Stone Bot')
 
     await setupTwitchEvents()
