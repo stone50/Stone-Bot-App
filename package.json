@@ -16,5 +16,8 @@
     "node-fetch": "^2.6.7",
     "nodemon": "^2.0.19",
     "tmi.js": "^1.8.5"
+  },
+  "overrides": {
+    "glob-parent": "~6.0.2"
   }
 }
