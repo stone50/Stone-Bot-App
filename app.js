@@ -32,5 +32,10 @@ start().catch(err => {
     } catch (error) {
         botLog('error', error)
     }
-    server.close()
+    botLog('info', 'closing server')
+    if (!server) {
+        botLog('info', 'no server to close')
+    } else {
+        server.close()
+    }
 })
