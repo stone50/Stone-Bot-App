@@ -366,7 +366,9 @@ const clearLogs = () => {
 //#endregion
 
 const botLog = (level, message) => {
-    fs.appendFileSync(`./logs.log`, `[${new Date().toISOString()}] ${level.toUpperCase()}: ${message}\r\n`)
+    const logMessage = `[${new Date().toISOString()}] ${level.toUpperCase()}: ${message}`
+    fs.appendFileSync(`./logs.log`, `${logMessage}\r\n`)
+    console.log(logMessage)
 }
 
 module.exports = {
