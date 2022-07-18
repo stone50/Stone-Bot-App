@@ -14,7 +14,11 @@ const handler = async () => {
 
     botLog('info', 'disconnecting from twitch')
 
-    sharedData.twitchClient.disconnect()
+    if (!sharedData.twitchClient) {
+        botLog('info', 'no twitch client to disconnect')
+    } else {
+        sharedData.twitchClient.disconnect()
+    }
 
     if (await saveLogs()) {
         clearLogs()
