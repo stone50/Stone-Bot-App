@@ -12,11 +12,8 @@ const handler = async () => {
         sharedData.localDatabase.timers[timerKeyword].destroy()
     })
 
-    botLog('info', 'disconnecting from twitch')
-
-    if (!sharedData.twitchClient) {
-        botLog('info', 'no twitch client to disconnect')
-    } else {
+    if (sharedData.twitchClient) {
+        botLog('info', 'disconnecting from twitch')
         sharedData.twitchClient.disconnect()
     }
 
@@ -24,9 +21,10 @@ const handler = async () => {
         clearLogs()
     }
 
-    botLog('info', 'disconnecting from database')
-
-    mongoose.disconnect()
+    if (mongoose.connection.readyState == 1) {
+        botLog('info', 'disconnecting from database')
+        mongoose.disconnect()
+    }
 
     clearSharedData()
 }
