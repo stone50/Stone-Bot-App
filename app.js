@@ -23,9 +23,11 @@ const start = async () => {
     botLog('info', 'starting server')
 
     server = app.listen(process.env.SERVER_PORT)
+
+    botLog('info', `server started at ${process.env.SERVER_URL}:${process.env.SERVER_PORT}`)
 }
 
-start().catch(err => {
+const onServerError = err => {
     botLog('error', err)
     try {
         offlineHandler()
@@ -38,4 +40,6 @@ start().catch(err => {
     } else {
         server.close()
     }
-})
+}
+
+start().catch(onServerError)

@@ -4,6 +4,17 @@ const onlineHandler = require('./online')
 const offlineHandler = require('./offline')
 const { botLog } = require('../api')
 
+const twitchEventHandler = (req, res) => {
+    try {
+        handler(req, res)
+    }
+    catch (err) {
+        res.sendStatus(400)
+
+        botLog('warn', `bad request. Request: ${JSON.stringify({ 'headers': req.headers ? req.headers : 'none', 'body': req.body ? req.body : 'none' })}`)
+    }
+}
+
 const handler = (req, res) => {
 
     botLog('info', 'twitch event subscription endpoint hit')
@@ -45,7 +56,7 @@ const handler = (req, res) => {
 
                 res.sendStatus(204)
 
-                botLog('warn', 'twitch event subscription endpoint hit with unknown message type: ${messageTypeHeader}')
+                botLog('warn', `twitch event subscription endpoint hit with unknown message type: ${messageTypeHeader}`)
         }
     }
     else {
@@ -56,4 +67,4 @@ const handler = (req, res) => {
     }
 }
 
-module.exports = handler
+module.exports = twitchEventHandler
