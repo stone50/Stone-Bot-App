@@ -17,7 +17,7 @@ const handler = async () => {
         sharedData.twitchClient.disconnect()
     }
 
-    if (await saveLogs()) {
+    if (mongoose.connection.readyState == 1 && await saveLogs()) {
         clearLogs()
     }
 

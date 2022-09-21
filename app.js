@@ -1,45 +1,51 @@
 require('dotenv').config()
-const express = require('express')
-const app = express()
+const nodeCleanup = require('node-cleanup')
 
-const setupTwitchEvents = require('./twitch events/setupTwitchEvents')
-const twitchEventHandler = require('./twitch events/twitchEventHandler')
-const { botLog, clearLogs } = require('./api')
+const { botLog } = require('./api')
 
+const onlineHandler = require('./twitch events/online')
 const offlineHandler = require('./twitch events/offline')
 
-let server = null
+const exitHandler = async (exitCode, signal) => {
+    botLog('info', `exiting with exit code: ${exitCode} and signal: ${signal}`)
+    await offlineHandler().catch((err) => {
+        botLog('error', err)
+    })
+    process.exit(process.pid, signal)
+}
+
+nodeCleanup((exitCode, signal) => {
+    exitHandler(exitCode, signal)
+    nodeCleanup.uninstall()
+    return false
+})
 
 const start = async () => {
 
     botLog('info', 'starting Stone Bot')
 
-    await setupTwitchEvents()
+    console.log(`
+    ======================================
+    |        --------------------        |
+    |      /                      \\      |
+    |      |     _          _     |      |
+    |     /|    / \\        / \\    |\\     |
+    |    | |    \\_/        \\_/    | |    |
+    |     \\|                      |/     |
+    |      |                      |      |
+    |      |      \\________/      |      |
+    |      |                      |      |
+    |      \\______________________/      |
+    |                                    |
+    | Stone Bot v3.0.0                   |
+    ======================================
+    Press Ctrl + C anytime to close
+    `)
 
-    botLog('info', 'setting up twitch event subscription endpoint')
-
-    app.post('/eventsub', twitchEventHandler)
-
-    botLog('info', 'starting server')
-
-    server = app.listen(process.env.SERVER_PORT)
-
-    botLog('info', `server started at ${process.env.SERVER_URL}:${process.env.SERVER_PORT}`)
+    onlineHandler().catch((err) => {
+        botLog('error', err)
+        process.exit()
+    })
 }
 
-const onServerError = err => {
-    botLog('error', err)
-    try {
-        offlineHandler()
-    } catch (error) {
-        botLog('error', error)
-    }
-    botLog('info', 'closing server')
-    if (!server) {
-        botLog('info', 'no server to close')
-    } else {
-        server.close()
-    }
-}
-
-start().catch(onServerError)
+start()
