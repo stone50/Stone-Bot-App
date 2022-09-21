@@ -4,7 +4,7 @@
   "description": "Node.js Twitch chat bot",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon app.js"
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "Stone Hobbs",
@@ -14,10 +14,6 @@
     "express": "^4.18.1",
     "mongoose": "^6.4.5",
     "node-fetch": "^2.6.7",
-    "nodemon": "^2.0.19",
     "tmi.js": "^1.8.5"
-  },
-  "overrides": {
-    "glob-parent": "~6.0.2"
   }
 }
