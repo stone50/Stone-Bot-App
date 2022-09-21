@@ -1,4 +1,5 @@
-const { sharedData, addQuote } = require('../api')
+const { sharedData } = require('../api/sharedData')
+const { addQuote } = require('../api/quotes')
 
 const handler = async ({ channel, userstate, messageParms }) => {
     const quotes = await addQuote(messageParms)

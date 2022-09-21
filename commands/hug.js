@@ -1,5 +1,5 @@
 const { randomRange } = require('../utils')
-const { sharedData } = require('../api')
+const { sharedData } = require('../api/sharedData')
 
 const handler = ({ channel, userstate }) => {
     if (randomRange(0, 10) === 0) {

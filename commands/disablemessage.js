@@ -1,4 +1,5 @@
-const { sharedData, setMessageEnable } = require('../api')
+const { sharedData } = require('../api/sharedData')
+const { setMessageEnable } = require('../api/messages')
 
 const handler = async ({ channel, userstate, messageParms }) => {
     const messageObject = sharedData.localDatabase.messages[messageParms]

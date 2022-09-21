@@ -1,4 +1,5 @@
-const { sharedData, deleteQuote } = require('../api')
+const { sharedData } = require('../api/sharedData')
+const { deleteQuote } = require('../api/quotes')
 
 const handler = async ({ channel, userstate, messageParms }) => {
     const quotes = sharedData.localDatabase.quotes

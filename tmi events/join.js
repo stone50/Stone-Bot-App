@@ -1,4 +1,5 @@
-const { sharedData, botLog } = require('../api')
+const { sharedData } = require('../api/sharedData')
+const { botLog } = require('../api/logs')
 
 const handler = (channel, username, self) => {
     botLog('info', `tmi join event hit by ${username}`)

@@ -1,4 +1,5 @@
-const { sharedData, botLog } = require('../api')
+const { sharedData } = require('../api/sharedData')
+const { botLog } = require('../api/logs')
 
 const createEvent = eventName => {
     botLog('info', `creating ${eventName} tmi event`)

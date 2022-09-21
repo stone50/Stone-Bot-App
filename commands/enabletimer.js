@@ -1,4 +1,5 @@
-const { sharedData, setTimerEnable } = require('../api')
+const { sharedData } = require('../api/sharedData')
+const { setTimerEnable } = require('../api/timers')
 
 const handler = async ({ channel, userstate, messageParms }) => {
     const timerObject = sharedData.localDatabase.timers[messageParms]

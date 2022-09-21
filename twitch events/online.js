@@ -2,7 +2,9 @@ const setupEventHandlers = require('../tmi events/setupTmiEvents')
 const { Client } = require('tmi.js')
 const mongoose = require('mongoose')
 
-const { sharedData, loadDatabase, setTwitchClient, botLog } = require('../api')
+const { loadDatabase, setTwitchClient } = require('../api/api')
+const { sharedData } = require('../api/sharedData')
+const { botLog } = require('../api/logs')
 
 const handler = async () => {
 

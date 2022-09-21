@@ -1,4 +1,4 @@
-const { sharedData } = require('../api')
+const { sharedData } = require('../api/sharedData')
 
 const handler = ({ channel, userstate, userPermission }) => {
     const commands = sharedData.localDatabase.commands

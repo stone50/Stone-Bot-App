@@ -1,7 +1,7 @@
 require('dotenv').config()
 const nodeCleanup = require('node-cleanup')
 
-const { botLog } = require('./api')
+const { botLog } = require('./api/logs')
 
 const onlineHandler = require('./twitch events/online')
 const offlineHandler = require('./twitch events/offline')

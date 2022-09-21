@@ -1,4 +1,5 @@
-const { sharedData, botLog } = require('../api')
+const { sharedData } = require('../api/sharedData')
+const { botLog } = require('../api/logs')
 const messageHandler = require('../messages/messageHandler')
 const commandHandler = require('../commands/commandHandler')
 

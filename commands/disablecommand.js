@@ -1,4 +1,5 @@
-const { sharedData, setCommandEnable } = require('../api')
+const { sharedData } = require('../api/sharedData')
+const { setCommandEnable } = require('../api/commands')
 
 const handler = async ({ channel, userstate, messageParms }) => {
 

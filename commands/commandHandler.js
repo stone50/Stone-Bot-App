@@ -1,4 +1,4 @@
-const { sharedData } = require('../api')
+const { sharedData } = require('../api/sharedData')
 
 const commandHandler = ({ channel, userstate, message, userPermission }) => {
     const messageArray = message.split(' ')

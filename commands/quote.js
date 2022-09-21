@@ -1,4 +1,4 @@
-const { sharedData, } = require('../api')
+const { sharedData } = require('../api/sharedData')
 const { getRandom } = require('../utils')
 
 const handler = ({ channel, userstate, messageParms }) => {

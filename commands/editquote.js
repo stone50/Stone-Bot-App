@@ -1,4 +1,5 @@
-const { sharedData, editQuote } = require('../api')
+const { sharedData } = require('../api/sharedData')
+const { editQuote } = require('../api/quotes')
 
 const handler = async ({ channel, userstate, messageParms }) => {
     const messageArray = messageParms.split(' ')

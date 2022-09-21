@@ -1,4 +1,5 @@
-const { sharedData, botLog } = require('../api')
+const { sharedData } = require('../api/sharedData')
+const { botLog } = require('../api/logs')
 
 const handler = (channel, username, viewers, autohost) => {
     botLog('info', `tmi hosted event hit by ${username} with ${viewers} viewers${autohost ? ' with autohost' : ''}`)

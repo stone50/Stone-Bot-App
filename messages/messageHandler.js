@@ -1,4 +1,4 @@
-const { sharedData } = require('../api')
+const { sharedData } = require('../api/sharedData')
 
 const messageHandler = ({ channel, userstate, message }) => {
     Object.keys(sharedData.localDatabase.messages).forEach(messageKeyword => {

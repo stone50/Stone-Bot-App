@@ -1,5 +1,5 @@
-const { sharedData } = require('../api')
 const { getRandom } = require('../utils')
+const { sharedData } = require('../api/sharedData')
 
 const handler = () => {
     const channel = sharedData.twitchClient.channels[0].slice(1)
