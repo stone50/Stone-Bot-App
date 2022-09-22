@@ -2,12 +2,13 @@ const mongoose = require('mongoose')
 
 const { clearSharedData, sharedData } = require('../api/sharedData')
 const { clearLogs, saveLogs, botLog } = require('../api/logs')
+const { clearGameRulesFromFile } = require('../api/gameRules')
 
 const handler = async () => {
 
     botLog('info', 'twitch offline event triggered')
 
-    sharedData.twitchClient.say(sharedData.twitchClient.channels[0], 'I must depart! Until next time MercyWing1 :) MercyWing2')
+    sharedData.twitchClient.say(sharedData.twitchClient.channels[0], 'I must depart! Until next time, PEACE MercyWing1 :) MercyWing2')
 
     botLog('info', 'removing timers')
 
@@ -20,7 +21,7 @@ const handler = async () => {
         sharedData.twitchClient.disconnect()
     }
 
-    if (mongoose.connection.readyState == 1) {
+    if (mongoose.connection.readyState === 1) {
         if (await saveLogs()) {
             clearLogs()
         } else {
@@ -30,6 +31,8 @@ const handler = async () => {
         botLog('info', 'disconnecting from database')
         mongoose.disconnect()
     }
+
+    clearGameRulesFromFile()
 
     clearSharedData()
 }

@@ -2,9 +2,11 @@ const fs = require('fs')
 
 const { logModel } = require('./models')
 
+const logFilePath = './logs.log'
+
 const saveLogs = async () => {
     botLog('info', 'saving logs to database')
-    for (const fileLine of fs.readFileSync('./logs.log', 'utf8').split('\r\n')) {
+    for (const fileLine of fs.readFileSync(logFilePath, 'utf8').split('\r\n')) {
         if (fileLine) {
             const attributes = fileLine.match(/\[(.*?)] (.*?): (.*)/)
             await new logModel({
@@ -19,16 +21,17 @@ const saveLogs = async () => {
 
 const clearLogs = () => {
     botLog('info', 'clearing logs from local file')
-    fs.truncateSync('./logs.log', 0)
+    fs.truncateSync(logFilePath, 0)
 }
 
 const botLog = (level, message) => {
     const logMessage = `[${new Date().toISOString()}] ${level.toUpperCase()}: ${message}`
-    fs.appendFileSync(`./logs.log`, `${logMessage}\r\n`)
+    fs.appendFileSync(logFilePath, `${logMessage}\r\n`)
     console.log(logMessage)
 }
 
 module.exports = {
+    logFilePath,
     saveLogs,
     clearLogs,
     botLog

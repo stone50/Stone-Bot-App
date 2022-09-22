@@ -1,3 +1,9 @@
+# Specific files
+game rules.txt
+
+# Builds
+*.exe
+
 # Logs
 logs
 *.log

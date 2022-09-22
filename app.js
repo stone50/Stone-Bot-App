@@ -37,7 +37,7 @@ const start = async () => {
     |      |                      |      |
     |      \\______________________/      |
     |                                    |
-    | Stone Bot v3.0.0                   |
+    | Stone Bot v4.0.0                   |
     ======================================
     Press Ctrl + C anytime to close
     `)
