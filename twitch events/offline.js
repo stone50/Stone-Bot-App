@@ -29,10 +29,10 @@ const handler = async () => {
         }
 
         botLog('info', 'disconnecting from database')
-        mongoose.disconnect()
+        await mongoose.disconnect()
     }
 
-    clearGameRulesFromFile()
+    await clearGameRulesFromFile()
 
     clearSharedData()
 }

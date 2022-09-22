@@ -4,7 +4,8 @@ const { sharedData } = require('./sharedData')
 const { botLog } = require('./logs')
 
 const gameRuleFilePath = './game rules.txt'
-const rulesCharLimit = 100
+const maxRuleLength = 30
+const maxRules = 4
 
 const loadGameRules = async () => {
     botLog('info', 'loading game rules from bot document')
@@ -74,7 +75,8 @@ const clearGameRules = async (awaitSave = false) => {
 
 module.exports = {
     gameRuleFilePath,
-    rulesCharLimit,
+    maxRuleLength,
+    maxRules,
     loadGameRules,
     loadGameRulesToFile,
     saveGameRules,

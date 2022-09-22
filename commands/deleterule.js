@@ -14,7 +14,6 @@ const handler = async ({ channel, userstate, messageParms }) => {
         return sharedData.twitchClient.say(channel, `${userstate.username}, you must choose a rule between 1 and ${gameRules.length}.`)
     }
     await deleteGameRule(gameRuleIndex)
-    sharedData.twitchClient.say(channel, `Rule ${gameRuleIndex + 1} has been deleted thanks to ${userstate.username}!`)
 }
 
 module.exports = handler

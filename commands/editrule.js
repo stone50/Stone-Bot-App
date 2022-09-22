@@ -1,5 +1,5 @@
 const { sharedData } = require('../api/sharedData')
-const { editGameRule, rulesCharLimit } = require('../api/gameRules')
+const { editGameRule, maxRuleLength } = require('../api/gameRules')
 
 const handler = async ({ channel, userstate, messageParms }) => {
     const gameRules = sharedData.localDatabase.gameRules
@@ -16,14 +16,11 @@ const handler = async ({ channel, userstate, messageParms }) => {
         return sharedData.twitchClient.say(channel, `${userstate.username}, you must choose a rule between 1 and ${gameRules.length}.`)
     }
 
-    let rulesLength = 0
-    gameRules.forEach((rule, index) => rulesLength += (index === gameRuleIndex) ? newGameRule.length : rule.length)
-    if (rulesLength > rulesCharLimit) {
+    if (newGameRule.length > maxRuleLength) {
         return sharedData.twitchClient.say(channel, `I'm sorry, ${userstate.username}, that rule is too long.`)
     }
 
     await editGameRule(gameRuleIndex, newGameRule)
-    sharedData.twitchClient.say(channel, `Rule ${gameRuleIndex + 1} has been edited thanks to ${userstate.username}!`)
 }
 
 module.exports = handler
