@@ -4,7 +4,7 @@ const { sharedData } = require('./sharedData')
 const { botLog } = require('./logs')
 
 const gameRuleFilePath = './game rules.txt'
-const maxRuleLength = 30
+const maxRuleLength = 45
 const maxRules = 4
 
 const loadGameRules = async () => {
